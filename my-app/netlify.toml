@@ -1,4 +1,0 @@
-[[redirects]]
-  from = "/*"
-  to = "puclic/index.html"
-  status = 200
