@@ -1,0 +1,15 @@
+.top-video {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.video-container {
+  display: flex;
+  flex-direction: row;   /* horizontal */
+  gap: 20px;             /* space between videos */
+  flex-wrap: wrap;       /* allows wrapping on smaller screens */
+  justify-content: center;
+  margin-top: 20px;
+}
