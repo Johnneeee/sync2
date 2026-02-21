@@ -5,7 +5,7 @@ import YouTube from "react-youtube";
 
 function App() {
   const playersRef = useRef([]); 
-  const [delays, setDelays] = useState([0, 0, 0, 0]); // delay per video (ms)
+  const [delays, setDelays] = useState([0, 0, 0, 0]); // delay per video (ms) jaja
 
   const topVideo = "9C_raiwz3n0"
 
