@@ -1,68 +1,107 @@
-import logo from './logo.svg';
 import './App.css';
 import React, { useRef, useState } from "react";
 import YouTube from "react-youtube";
 
 function App() {
-  const playersRef = useRef([]); 
-  const [delays, setDelays] = useState([0, 0, 0, 0]); // delay per video (ms) jaja
+  const playersRef = useRef([]);
 
-  const topVideo = "9C_raiwz3n0"
+  // Top video (fixed slot)
+  const [topVideo, setTopVideo] = useState({ id: "9C_raiwz3n0", delay: 6100 });
 
-  const videos = [
-    "8sJ2y6GX41o",
-    "ODZpZXt8kdY",
-    "4nXLKNUFbm8"
-  ];
+  // Bottom videos (dynamic)
+  const [videos, setVideos] = useState([
+    { id: "8sJ2y6GX41o", delay: 5200 },
+    { id: "ODZpZXt8kdY", delay: 900 },
+    { id: "4nXLKNUFbm8", delay: 0 }
+  ]);
 
   const opts = {
     height: "250",
     width: "400",
-    playerVars: {
-      autoplay: 0,
-    },
+    playerVars: { autoplay: 0 },
+  };
+
+  const extractVideoId = (url) => {
+    const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : url;
+  };
+
+  const handleTopVideoChange = (value) => {
+    setTopVideo({ ...topVideo, id: extractVideoId(value) });
+  };
+
+  const handleTopDelayChange = (value) => {
+    setTopVideo({ ...topVideo, delay: Number(value) });
+  };
+
+  const handleVideoChange = (index, value) => {
+    const updated = [...videos];
+    updated[index].id = extractVideoId(value);
+    setVideos(updated);
+  };
+
+  const handleDelayChange = (index, value) => {
+    const updated = [...videos];
+    updated[index].delay = Number(value);
+    setVideos(updated);
+  };
+
+  const addVideo = () => setVideos([...videos, { id: "", delay: 0 }]);
+  const removeVideo = (index) => {
+    const updated = videos.filter((_, i) => i !== index);
+    setVideos(updated);
+    playersRef.current.splice(index + 1, 1); // shift for top video
   };
 
   const onReady = (event, index) => {
     playersRef.current[index] = event.target;
   };
 
-  const handleDelayChange = (index, value) => {
-    const newDelays = [...delays];
-    newDelays[index] = Number(value);
-    setDelays(newDelays);
-  };
-
   const handlePlayAll = () => {
-    playersRef.current.forEach((player, index) => {
+    // Play top video first
+    if (playersRef.current[0]) {
+      setTimeout(() => playersRef.current[0].playVideo(), topVideo.delay);
+    }
+
+    // Play bottom videos
+    playersRef.current.slice(1).forEach((player, i) => {
       if (player) {
-        setTimeout(() => {
-          player.playVideo();
-        }, delays[index]); // already milliseconds
+        setTimeout(() => player.playVideo(), videos[i].delay);
       }
     });
   };
 
   const handleStopAll = () => {
-    playersRef.current.forEach(player => {
-      player?.stopVideo();
-    });
+    playersRef.current.forEach(player => player?.stopVideo());
   };
 
   return (
     <div className="app">
-      
-      <button onClick={handlePlayAll}>Play All Videos</button>
-      <button onClick={handleStopAll}>Stop All Videos</button>
-      
-      {/* 🔥 TOP VIDEO (index 0) */}
+
+      <div className="controls">
+        <button onClick={addVideo}>➕ Add Video</button>
+        <button onClick={handlePlayAll}>▶ Play All</button>
+        <button onClick={handleStopAll}>⏹ Stop All</button>
+      </div>
+
+      {/* Top Video */}
       <div className="top-video">
         <div className="video-wrapper">
-          <YouTube
-            videoId={topVideo}
-            opts={opts}
-            onReady={(event) => onReady(event, 0)}
+          <input
+            type="text"
+            placeholder="Paste YouTube URL or ID"
+            value={topVideo.id}
+            onChange={(e) => handleTopVideoChange(e.target.value)}
           />
+
+          {topVideo.id && (
+            <YouTube
+              videoId={topVideo.id}
+              opts={opts}
+              onReady={(event) => onReady(event, 0)}
+            />
+          )}
 
           <div className="delay-control">
             <label>Start Delay (ms): </label>
@@ -70,50 +109,54 @@ function App() {
               type="number"
               min="0"
               step="100"
-              value={delays[0]}
-              onChange={(e) =>
-                handleDelayChange(0, e.target.value)
-              }
+              value={topVideo.delay}
+              onChange={(e) => handleTopDelayChange(e.target.value)}
             />
           </div>
         </div>
       </div>
 
-      {/* Bottom Row Videos (start at index 1) */}
+      {/* Bottom Videos */}
       <div className="video-container">
-        {videos.map((id, i) => {
-          const index = i + 1; // shift index
-          return (
-            <div key={id} className="video-wrapper">
-              <YouTube
-                videoId={id}
-                opts={opts}
-                onReady={(event) => onReady(event, index)}
-              />
+        {videos.map((video, index) => (
+          <div key={index} className="video-wrapper">
+            <input
+              type="text"
+              placeholder="Paste YouTube URL or ID"
+              value={video.id}
+              onChange={(e) => handleVideoChange(index, e.target.value)}
+            />
 
-              <div className="delay-control">
-                <label>Start Delay (ms): </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="100"
-                  value={delays[index]}
-                  onChange={(e) =>
-                    handleDelayChange(index, e.target.value)
-                  }
-                />
-              </div>
+            {video.id && (
+              <YouTube
+                videoId={video.id}
+                opts={opts}
+                onReady={(event) => onReady(event, index + 1)} // +1 for top video
+              />
+            )}
+
+            <div className="delay-control">
+              <label>Start Delay (ms): </label>
+              <input
+                type="number"
+                min="0"
+                step="100"
+                value={video.delay}
+                onChange={(e) => handleDelayChange(index, e.target.value)}
+              />
             </div>
-          );
-        })}
+
+            <button
+              className="remove-btn"
+              onClick={() => removeVideo(index)}
+            >
+              ❌ Remove
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 export default App;
-
-      // <iframe width="560" height="315" src="https://www.youtube.com/embed/8sJ2y6GX41o?si=nSIb6C1A0pN22GeZ" title="YouTube video player"></iframe>
-      // <iframe width="560" height="315" src="https://www.youtube.com/embed/ODZpZXt8kdY?si=aOqmxwB3uOHzO6q5" title="YouTube video player"></iframe>
-      // <iframe width="560" height="315" src="https://www.youtube.com/embed/4nXLKNUFbm8?si=DBnWIlwd1pT5r1X0" title="YouTube video player"></iframe>
-
