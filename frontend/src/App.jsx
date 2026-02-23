@@ -1,6 +1,7 @@
 import "./App.css";
 import React, { useRef, useState } from "react";
 import YouTube from "react-youtube";
+// import 'normalize.css'
 
 function App() {
   const topPlayersRef = useRef([]);
@@ -24,7 +25,7 @@ function App() {
       song: "Brick by boring brick",
       artist: "Paramore",
       topVideos: [
-        { id: "9C_raiwz3n0", delay: 6100 },
+        { id: "9C_raiwz3n0", delay: 6100},
       ],
       bottomVideos: [
         { id: "8sJ2y6GX41o", delay: 5200 },
@@ -57,12 +58,35 @@ function App() {
   };
 
 
-  const setSong = (value) => {
-    topPlayersRef.current = [];
-    bottomPlayersRef.current = [];
+  const setSong = async (songname) => {
+    // topPlayersRef.current = [];
+    // bottomPlayersRef.current = [];
+    // e.preventDefault();
+    try {
+      topPlayersRef.current = [];
+      bottomPlayersRef.current = [];
+      const response = await fetch(`http://localhost:5000/videos/${songname}`);
+      const videos = await response.json();
+      
+      const topVideos = videos
+        .filter(video => video.position === "top")
+        .map(video => ({ id: video.youtube_id, delay: video.delay_ms }));
 
-    setTopVideos(songs[value].topVideos);
-    setBottomVideos(songs[value].bottomVideos);
+      const bottomVideos = videos
+        .filter(video => video.position === "bottom")
+        .map(video => ({ id: video.youtube_id, delay: video.delay_ms }));
+
+      setTopVideos(topVideos);
+      setBottomVideos(bottomVideos);
+      // console.log(videos);
+      // console.log(topVideos)
+      // console.log(bottomVideos)
+    } catch (err) {
+      console.error(err.message)
+    }
+
+    // setTopVideos(songs[value].topVideos);
+    // setBottomVideos(songs[value].bottomVideos);
   };
   
   const handleVideoChange = (rowSetter, rowVideos, index, value) => {
