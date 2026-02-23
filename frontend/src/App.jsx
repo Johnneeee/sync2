@@ -1,7 +1,7 @@
 import "./App.css";
 import React, { useRef, useState } from "react";
 import YouTube from "react-youtube";
-// import 'normalize.css'
+import { API_URL } from "./api.js";
 
 function App() {
   const topPlayersRef = useRef([]);
@@ -65,7 +65,7 @@ function App() {
     try {
       topPlayersRef.current = [];
       bottomPlayersRef.current = [];
-      const response = await fetch(`http://localhost:5000/videos/${songname}`);
+      const response = await fetch(`${API_URL}/videos/${songname}`);
       const videos = await response.json();
       
       const topVideos = videos
