@@ -36,12 +36,12 @@ function App() {
   }
 
   const [topVideos, setTopVideos] = useState([
-    { id: "9C_raiwz3n0", delay: 6100 },
+    { id: "9C_raiwz3n0", delay: 6300 },
   ]);
 
   const [bottomVideos, setBottomVideos] = useState([
-    { id: "8sJ2y6GX41o", delay: 5200 },
-    { id: "ODZpZXt8kdY", delay: 900 },
+    { id: "8sJ2y6GX41o", delay: 5400 },
+    { id: "ODZpZXt8kdY", delay: 1100 },
     { id: "4nXLKNUFbm8", delay: 0 }
   ]);
 
