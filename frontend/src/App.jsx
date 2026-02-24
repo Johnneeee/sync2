@@ -54,11 +54,36 @@ function App() {
   };
 
 
-  const setSong = (songname) => {
-    topPlayersRef.current = [];
-    bottomPlayersRef.current = [];
-    setTopVideos(songs[songname].topVideos);
-    setBottomVideos(songs[songname].bottomVideos);
+  const setSong = async (songname) => {
+    // topPlayersRef.current = [];
+    // bottomPlayersRef.current = [];
+    // e.preventDefault();
+    try {
+      topPlayersRef.current = [];
+      bottomPlayersRef.current = [];
+      const response = await fetch(`${API_URL}/videos2/${songname}`);
+      const videos = await response.json();
+      const sortedVideos = videos.sort((a, b) => a.pos - b.pos);
+      
+      const topVideos = sortedVideos
+        .filter(video => [1, 2, 3].includes(video.pos))
+        .map(video => ({ id: video.youtube_id, delay: video.start_time }));
+
+      const bottomVideos = sortedVideos
+        .filter(video => ![1, 2, 3].includes(video.pos))
+        .map(video => ({ id: video.youtube_id, delay: video.start_time }));
+
+      setTopVideos(topVideos);
+      setBottomVideos(bottomVideos);
+      console.log(sortedVideos);
+      console.log(topVideos)
+      console.log(bottomVideos)
+    } catch (err) {
+      console.error(err.message)
+    }
+
+    // setTopVideos(songs[value].topVideos);
+    // setBottomVideos(songs[value].bottomVideos);
   };
   
   const handleVideoChange = (rowSetter, rowVideos, index, value) => {
