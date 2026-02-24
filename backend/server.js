@@ -31,6 +31,25 @@ app.get("/videos/:songname", async (req, res) => {
     }
 });
 
+app.get("/videos2", async (req, res) => {
+    try {
+        const allData = await pool.query("SELECT * FROM videos2");
+        res.json(allData.rows);
+    } catch (err) {
+        console.error(err.message);
+    }
+});
+
+app.get("/videos2/:songname", async (req, res) => {
+    try {
+        const { songname } = req.params;
+        const songnames = await pool.query("SELECT * FROM videos2 WHERE songname = $1", [songname]);
+        res.json(songnames.rows);
+    } catch (err) {
+        console.error(err.message);
+    }
+});
+
 app.listen(5000, () => {
     console.log("Server has started on port 5000")
 });

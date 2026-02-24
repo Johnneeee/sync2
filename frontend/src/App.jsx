@@ -95,12 +95,12 @@ function App() {
         player?.pauseVideo()
       );
 
-    }, 2000);
+    }, 500);
   };
 
 
   
-  const reset = () => {
+  const setTime = () => {
     topPlayersRef.current.forEach((player, i) => {
       if (player) {
         player.seekTo(topVideos[i]?.delay || 0, true); // true = precise seek
@@ -151,7 +151,7 @@ function App() {
           <button onClick={() => addVideo(setTopVideos, topVideos)}>➕ Add Top Video</button>
           <button onClick={() => addVideo(setBottomVideos, bottomVideos)}>➕ Add Bottom Video </button>
           <button onClick={buffer}>Buffer</button>
-          <button onClick={reset}>Reset</button>
+          <button onClick={setTime}>Set time</button>
           <button onClick={handlePlayAll}>▶ Play ALL Videos</button>
           <button onClick={handleStopAll}>⏹ Stop ALL Videos</button>
         </div>
