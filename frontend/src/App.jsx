@@ -14,6 +14,8 @@ function App() {
       ],
       bottomVideos: [
         { id: "OzYDa3m75Es", delay: 2 },
+        { id: "OzYDa3m75Es", delay: 2 },
+        { id: "OzYDa3m75Es", delay: 2 },
         { id: "qp8etdQjHPo", delay: 2.8},
         { id: "xA3s3PHr0uA", delay: 0 }
       ]
@@ -42,9 +44,35 @@ function App() {
   const bottomPlayersRef = useRef([]);
   const [topVideos, setTopVideos] = useState([]);
   const [bottomVideos, setBottomVideos] = useState([]);
+  const [currentSong, setCurrentSong] = useState([]);
+  const [presets, setPresets] = useState([]);
 
   useEffect(() => {
-    setSong("ParamoreBrickByBoringBrick");
+    const fetchData = async () => {
+      try {
+        setSong("ParamoreBrickByBoringBrick");
+
+        const response = await fetch(`${API_URL}/videos2`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const data = await response.json();
+        const distinctVideos = [
+          ...new Map(
+            data.map(video => [video.songname, video])
+          ).values()
+        ];
+        const songnames = distinctVideos.map(video => video.songname)
+        setPresets(songnames);
+        console.log(songnames)
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const extractVideoId = (url) => {
@@ -53,11 +81,15 @@ function App() {
     return match ? match[1] : url;
   };
 
+  // const setSong = (value) => {
+  //   topPlayersRef.current = [];
+  //   bottomPlayersRef.current = [];
+  //   setTopVideos(songs[value].topVideos);
+  //   setBottomVideos(songs[value].bottomVideos);
+  // };
+  
 
   const setSong = async (songname) => {
-    // topPlayersRef.current = [];
-    // bottomPlayersRef.current = [];
-    // e.preventDefault();
     try {
       topPlayersRef.current = [];
       bottomPlayersRef.current = [];
@@ -73,17 +105,15 @@ function App() {
         .filter(video => ![1, 2, 3].includes(video.pos))
         .map(video => ({ id: video.youtube_id, delay: video.start_time }));
 
+      setCurrentSong(songname)
       setTopVideos(topVideos);
       setBottomVideos(bottomVideos);
-      console.log(sortedVideos);
-      console.log(topVideos)
-      console.log(bottomVideos)
+      // console.log(sortedVideos);
+      // console.log(topVideos)
+      // console.log(bottomVideos)
     } catch (err) {
       console.error(err.message)
     }
-
-    // setTopVideos(songs[value].topVideos);
-    // setBottomVideos(songs[value].bottomVideos);
   };
   
   const handleVideoChange = (rowSetter, rowVideos, index, value) => {
@@ -154,6 +184,8 @@ function App() {
     );
   };
 
+
+
   const onReady = (playersRef, event, index) => {
     playersRef.current[index] = event.target;
 
@@ -170,8 +202,8 @@ function App() {
   return (
     <div className="app">
 
-      <div class="flex-container"> {/*controls*/}
-        <div class="flex-column"> 
+      <div className="flex-container"> {/*controls*/}
+        <div className="flex-column"> 
         
           <button onClick={() => addVideo(setTopVideos, topVideos)}>➕ Add Top Video</button>
           <button onClick={() => addVideo(setBottomVideos, bottomVideos)}>➕ Add Bottom Video </button>
@@ -180,10 +212,23 @@ function App() {
           <button onClick={handlePlayAll}>▶ Play ALL Videos</button>
           <button onClick={handleStopAll}>⏹ Stop ALL Videos</button>
         </div>
-        <div class="flex-column">
-          Presets:
+        <div className="flex-column">
+          <div>
+            <label>Presets: </label>
+            <select value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
+              {/* <option value="">-- Select --</option> */}
+              {presets.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </select>
+
+            {/* {"selectedFruit" && <p>You selected: {"selectedFruit"}</p>} */}
+          </div>
+          {/* Presets:
           <button onClick={() => setSong("ParamoreBrickByBoringBrick")}>Paramore - Brick by Boring Brick</button>
-          <button onClick={() => setSong("ParamoreStillIntoYou")}>Paramore - Still into you</button>
+          <button onClick={() => setSong("ParamoreStillIntoYou")}>Paramore - Still into you</button> */}
         </div>
       </div>
 
