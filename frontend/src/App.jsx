@@ -46,6 +46,7 @@ function App() {
   const [bottomVideos, setBottomVideos] = useState([]);
   const [currentSong, setCurrentSong] = useState([]);
   const [presets, setPresets] = useState([]);
+  const [loading, setLoading] = useState(true); // 👈 loading state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,9 +70,11 @@ function App() {
         );
         const songnames = distinctVideos.map(video => video.songname)
         setPresets(songnames);
+        setLoading(false);
         console.log(songnames)
       } catch (err) {
         console.error(err);
+        // setLoading(false);
       }
     };
 
@@ -201,7 +204,14 @@ function App() {
       event.target.mute();     // 🔇 Everything else
     }
   };
-  
+
+  if (loading) {
+    return <h2>Loading...</h2>; // 👈 show while loading
+  }
+
+  // if (error) {
+  //   return <h2>Error: {error}</h2>;
+  // }
   return (
     <div className="app">
 
