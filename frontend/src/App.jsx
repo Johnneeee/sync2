@@ -59,11 +59,14 @@ function App() {
         }
 
         const data = await response.json();
+
         const distinctVideos = [
           ...new Map(
             data.map(video => [video.songname, video])
           ).values()
-        ];
+        ].sort((a, b) => 
+          a.songname.localeCompare(b.songname)
+        );
         const songnames = distinctVideos.map(video => video.songname)
         setPresets(songnames);
         console.log(songnames)
