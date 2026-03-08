@@ -4,36 +4,6 @@ import YouTube from "react-youtube";
 import { API_URL } from "./api.js";
 
 function App() {
-  const songs = {
-    ParamoreStillIntoYou: {
-      song: "Still into you",
-      artist: "Paramore",
-      topVideos: [
-        { id: "5z-lcBJK-FE", delay: 2.8},
-        { id: "wrCxfWVuDXU", delay: 10.6}
-      ],
-      bottomVideos: [
-        { id: "OzYDa3m75Es", delay: 2 },
-        { id: "OzYDa3m75Es", delay: 2 },
-        { id: "OzYDa3m75Es", delay: 2 },
-        { id: "qp8etdQjHPo", delay: 2.8},
-        { id: "xA3s3PHr0uA", delay: 0 }
-      ]
-    },
-    ParamoreBrickByBoringBrick: {
-      song: "Brick by boring brick",
-      artist: "Paramore",
-      topVideos: [
-        { id: "9C_raiwz3n0", delay: 0},
-      ],
-      bottomVideos: [
-        { id: "8sJ2y6GX41o", delay: 1.1},
-        { id: "ODZpZXt8kdY", delay: 5.5},
-        { id: "4nXLKNUFbm8", delay: 6.5}
-      ]
-    }
-  }
-
   const opts = {
     height: "250",
     width: "400",
@@ -51,30 +21,23 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setSong("ParamoreBrickByBoringBrick");
 
-        const response = await fetch(`${API_URL}/videos2`);
+        // const response = await fetch(`${API_URL}/videos3/songs`);
+        const response = await fetch(`http://localhost:5000/videos3/songs`);
         
         if (!response.ok) {
           throw new Error("Failed to fetch data");
         }
 
-        const data = await response.json();
+        const jsonSongs = await response.json();
+        const listSongs = jsonSongs.map(video => video.songname)
 
-        const distinctVideos = [
-          ...new Map(
-            data.map(video => [video.songname, video])
-          ).values()
-        ].sort((a, b) => 
-          a.songname.localeCompare(b.songname)
-        );
-        const songnames = distinctVideos.map(video => video.songname)
-        setPresets(songnames);
+        setSong("ParamoreBrickByBoringBrick");
+        setPresets(listSongs);
         setLoading(false);
-        console.log(songnames)
+
       } catch (err) {
         console.error(err);
-        // setLoading(false);
       }
     };
 
@@ -86,37 +49,26 @@ function App() {
     const match = url.match(regex);
     return match ? match[1] : url;
   };
-
-  // const setSong = (value) => {
-  //   topPlayersRef.current = [];
-  //   bottomPlayersRef.current = [];
-  //   setTopVideos(songs[value].topVideos);
-  //   setBottomVideos(songs[value].bottomVideos);
-  // };
   
-
   const setSong = async (songname) => {
     try {
       topPlayersRef.current = [];
       bottomPlayersRef.current = [];
-      const response = await fetch(`${API_URL}/videos2/${songname}`);
+      // const response = await fetch(`${API_URL}/videos3/${songname}`);
+      const response = await fetch(`http://localhost:5000/videos3/${songname}`);
       const videos = await response.json();
-      const sortedVideos = videos.sort((a, b) => a.pos - b.pos);
       
-      const topVideos = sortedVideos
-        .filter(video => [1, 2, 3].includes(video.pos))
+      const topVideos = videos
+        .filter(video => ["top"].includes(video.row_position))
         .map(video => ({ id: video.youtube_id, delay: video.start_time }));
 
-      const bottomVideos = sortedVideos
-        .filter(video => ![1, 2, 3].includes(video.pos))
+      const bottomVideos = videos
+        .filter(video => ["bot"].includes(video.row_position))
         .map(video => ({ id: video.youtube_id, delay: video.start_time }));
 
       setCurrentSong(songname)
       setTopVideos(topVideos);
       setBottomVideos(bottomVideos);
-      // console.log(sortedVideos);
-      // console.log(topVideos)
-      // console.log(bottomVideos)
     } catch (err) {
       console.error(err.message)
     }
@@ -204,32 +156,40 @@ function App() {
       event.target.mute();     // 🔇 Everything else
     }
   };
+  const submitPreset = () => {
+    const tvp = topVideos.map((video, index) => ({
+      ...video,
+      pos: `1${index + 1}`
+    }));
 
-  if (loading) {
-    return <h2>Loading...</h2>; // 👈 show while loading
-  }
+    const bvp = bottomVideos.map((video, index) => ({
+      ...video,
+      pos: `2${index + 1}`
+    }));
+    console.log(tvp)
+    console.log(bvp)
+    // console.log(bottomVideos)
+  };
 
-  // if (error) {
-  //   return <h2>Error: {error}</h2>;
-  // }
   return (
     <div className="app">
 
       <div className="flex-container"> {/*controls*/}
+
+
         <div className="flex-column"> 
-        
           <button onClick={() => addVideo(setTopVideos, topVideos)}>➕ Add Top Video</button>
           <button onClick={() => addVideo(setBottomVideos, bottomVideos)}>➕ Add Bottom Video </button>
           <button onClick={buffer}>Buffer</button>
           <button onClick={setTime}>Set time</button>
           <button onClick={handlePlayAll}>▶ Play ALL Videos</button>
           <button onClick={handleStopAll}>⏹ Stop ALL Videos</button>
+          <button onClick={submitPreset}>Submit this preset</button>
         </div>
+
         <div className="flex-column">
           <div>
-            <label>Presets: </label>
-            <select value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
-              {/* <option value="">-- Select --</option> */}
+            <select style={{ width: "200px" }} value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
               {presets.map((id) => (
                 <option key={id} value={id}>
                   {id}
@@ -237,15 +197,23 @@ function App() {
               ))}
             </select>
 
-            {/* {"selectedFruit" && <p>You selected: {"selectedFruit"}</p>} */}
           </div>
-          {/* Presets:
-          <button onClick={() => setSong("ParamoreBrickByBoringBrick")}>Paramore - Brick by Boring Brick</button>
-          <button onClick={() => setSong("ParamoreStillIntoYou")}>Paramore - Still into you</button> */}
         </div>
       </div>
 
       <div className="video-container"> {/*top videos*/}
+        {loading && (
+          <p>
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            Loading!
+          </p>
+        )}
         {topVideos.map((video, index) => (
           <div key={index} className="video-wrapper">
             
