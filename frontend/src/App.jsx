@@ -1,6 +1,7 @@
 import "./App.css";
 import React, { useRef, useState, useEffect } from "react";
 import YouTube from "react-youtube";
+import DOMPurify from 'dompurify';
 import { API_URL } from "./api.js";
 
 function App() {
@@ -164,15 +165,17 @@ function App() {
     const randomNum = Math.floor(Math.random() * 100) + 1;
 
     // Helper function to map videos to request format
+
     const mapVideos = (videos, row) =>
       videos.map((video, index) => ({
-        randomsongid: String(randomNum),
-        youtube_id: video.id,
-        start_time: video.delay,
+        randomsongid: randomNum,
+        youtube_id: DOMPurify.sanitize(video.id), // sanitize video ID
+        start_time: video.delay, 
         row_position: row,
         column_position: index + 1,
-        creator: username,
+        creator: DOMPurify.sanitize(username), // sanitize username
       }));
+    // DOMPurify.sanitize(userInput)
 
     const payload = [
       ...mapVideos(topVideos, "top"),
