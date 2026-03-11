@@ -201,11 +201,25 @@ function App() {
     };
 
     if (rqQueue >= 3) {
-      showMessage("Queue is full. Try again later");
+      showMessage("Queue is full. Please try again later");
+      return;
+    }
+    if (topVideos.length === 0 && bottomVideos.length === 0) {
+      showMessage("Please input some videos");
+      return;
+    }
+    if (username == "") {
+      showMessage("Please enter a username");
+      return;
+    }
+    if (username.length > 20) {
+      showMessage("Username is too long");
       return;
     }
 
+
     // Send new song request
+    console.log(payload)
     try {
       const response = await fetch("http://localhost:5000/songsRequested/newSong", {
         method: "POST",
