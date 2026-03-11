@@ -27,13 +27,8 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        
-        // const response = await fetch(`${API_URL}/videos3/songs`);
-        const response = await fetch(`http://localhost:5000/videos3/songs`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
+        const response = await fetch(`${API_URL}/videos3/songs`);
+        if (!response.ok) throw new Error("Failed to fetch data");
 
         const jsonSongs = await response.json();
         const listSongs = jsonSongs.map(video => ({ songname: video.songname, creator: video.creator }))
@@ -49,8 +44,6 @@ function App() {
     fetchData();
   }, []);
 
-  
-
   const extractVideoId = (url) => {
     const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
     const match = url.match(regex);
@@ -61,8 +54,7 @@ function App() {
     try {
       topPlayersRef.current = [];
       bottomPlayersRef.current = [];
-      // const response = await fetch(`${API_URL}/videos3/${songname}`);
-      const response = await fetch(`http://localhost:5000/videos3/${songname}`);
+      const response = await fetch(`${API_URL}/videos3/${songname}`);
       const videos = await response.json();
       
       const topVideos = videos
@@ -185,7 +177,7 @@ function App() {
     // Fetch the current queue length
     let rqQueue = 0;
     try {
-      const response = await fetch("http://localhost:5000/songsRequested/songs");
+      const response = await fetch(`${API_URL}/songsRequested/songs`);
       if (!response.ok) throw new Error("Failed to fetch data");
 
       const jsonSongs = await response.json();
@@ -224,7 +216,7 @@ function App() {
     // Send new song request
     console.log(payload)
     try {
-      const response = await fetch("http://localhost:5000/songsRequested/newSong", {
+      const response = await fetch(`${API_URL}/songsRequested/newSong`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
