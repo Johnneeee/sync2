@@ -67,5 +67,5 @@ app.post("/songsRequested/newSong", async (req, res) => {
 
 
 app.listen(PORT, () => {
-    console.log("Server has started on port 5000")
+  console.log(`Server running on port ${PORT}`);
 });
