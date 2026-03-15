@@ -2,7 +2,7 @@ const express = require("express")
 const cors = require("cors")
 const app = express()
 const pool = require("./db")
-// const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 // middleware
 app.use(cors())
@@ -66,6 +66,6 @@ app.post("/songsRequested/newSong", async (req, res) => {
 });
 
 
-app.listen(5000, () => {
+app.listen(PORT, () => {
     console.log("Server has started on port 5000")
 });
