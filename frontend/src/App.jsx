@@ -5,12 +5,7 @@ import DOMPurify from 'dompurify';
 import { API_URL } from "./api.js";
 
 function App() {
-  const opts = {
-    height: "250",
-    width: "400",
-    playerVars: { autoplay: 0 },
-  };
-
+  const opts = {height: "250", width: "400", playerVars: { autoplay: 0 }};
   const topPlayersRef = useRef([]);
   const bottomPlayersRef = useRef([]);
   const [topVideos, setTopVideos] = useState([]);
@@ -22,7 +17,6 @@ function App() {
   const [message, setMessage] = useState(""); // 👈 loading state
   const [isDisabled, setIsDisabled] = useState(false);
 
-  
   
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +45,7 @@ function App() {
   };
   
   const setSong = async (songname) => {
+    setMessage("Setting song")
     try {
       topPlayersRef.current = [];
       bottomPlayersRef.current = [];
@@ -68,6 +63,7 @@ function App() {
       setCurrentSong(songname)
       setTopVideos(topVideos);
       setBottomVideos(bottomVideos);
+      setMessage("")
     } catch (err) {
       console.error(err.message)
     }
@@ -154,6 +150,29 @@ function App() {
   
   const submitPreset = async () => {
     setIsDisabled(true);
+
+    // Helper function to show messages
+    const showMessage = (msg, duration = 3000) => {
+      setMessage(msg);
+      setTimeout(() => {
+        setMessage("");
+        setIsDisabled(false);
+      }, duration);
+    };
+
+    if (topVideos.length === 0 && bottomVideos.length === 0) {
+      showMessage("Please input some videos");
+      return;
+    }
+    if (username == "") {
+      showMessage("Please enter a username");
+      return;
+    }
+    if (username.length > 20) {
+      showMessage("Username is too long");
+      return;
+    }
+    
     const randomNum = Math.floor(Math.random() * 100) + 1;
 
     // Helper function to map videos to request format
@@ -167,7 +186,6 @@ function App() {
         column_position: index + 1,
         creator: DOMPurify.sanitize(username), // sanitize username
       }));
-    // DOMPurify.sanitize(userInput)
 
     const payload = [
       ...mapVideos(topVideos, "top"),
@@ -176,6 +194,8 @@ function App() {
 
     // Fetch the current queue length
     let rqQueue = 0;
+    setMessage("Sending request")
+
     try {
       const response = await fetch(`${API_URL}/songsRequested/songs`);
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -186,32 +206,10 @@ function App() {
       console.error("Error fetching queue:", err);
     }
 
-    // Helper function to show messages
-    const showMessage = (msg, duration = 3000) => {
-      setMessage(msg);
-      setTimeout(() => {
-        setMessage("");
-        setIsDisabled(false);
-      }, duration);
-    };
-
     if (rqQueue >= 3) {
       showMessage("Queue is full. Please try again later");
       return;
     }
-    if (topVideos.length === 0 && bottomVideos.length === 0) {
-      showMessage("Please input some videos");
-      return;
-    }
-    if (username == "") {
-      showMessage("Please enter a username");
-      return;
-    }
-    if (username.length > 20) {
-      showMessage("Username is too long");
-      return;
-    }
-
 
     // Send new song request
     console.log(payload)
@@ -257,10 +255,10 @@ function App() {
           <div>
             <select style={{ width: "200px" }} value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
               <option value="" disabled hidden>
-                {loading ? "Loading presets" : "Select a preset!"}
+                {loading ? "Loading presets..." : "---Select a preset---"}
               </option>
               {presets.map((id) => (
-                <option key={id.songname} value={id.songname} title={`created by ${id.creator}`}>
+                <option key={id.songname} value={id.songname} title={`Submitted by ${id.creator}`}>
                   {id.songname}
                 </option>
               ))}
@@ -282,7 +280,7 @@ function App() {
             <br />
             <br />
             <br />
-            Make your own sync or select a preset in the top right!
+            Create your own sync or select a preset in the top right!
           </p>
         )}
         {topVideos.map((video, index) => (
