@@ -1,10 +1,39 @@
 import "./App.css";
 import React, { useRef, useState, useEffect } from "react";
 import YouTube from "react-youtube";
-import DOMPurify from 'dompurify';
 import { API_URL } from "./api.js";
 
 function App() {
+  const songs = {
+    ParamoreStillIntoYou: {
+      song: "Still into you",
+      artist: "Paramore",
+      topVideos: [
+        { id: "5z-lcBJK-FE", delay: 2.8},
+        { id: "wrCxfWVuDXU", delay: 10.6}
+      ],
+      bottomVideos: [
+        { id: "OzYDa3m75Es", delay: 2 },
+        { id: "OzYDa3m75Es", delay: 2 },
+        { id: "OzYDa3m75Es", delay: 2 },
+        { id: "qp8etdQjHPo", delay: 2.8},
+        { id: "xA3s3PHr0uA", delay: 0 }
+      ]
+    },
+    ParamoreBrickByBoringBrick: {
+      song: "Brick by boring brick",
+      artist: "Paramore",
+      topVideos: [
+        { id: "9C_raiwz3n0", delay: 0},
+      ],
+      bottomVideos: [
+        { id: "8sJ2y6GX41o", delay: 1.1},
+        { id: "ODZpZXt8kdY", delay: 5.5},
+        { id: "4nXLKNUFbm8", delay: 6.5}
+      ]
+    }
+  }
+
   const opts = {
     height: "250",
     width: "400",
@@ -17,27 +46,35 @@ function App() {
   const [bottomVideos, setBottomVideos] = useState([]);
   const [currentSong, setCurrentSong] = useState([]);
   const [presets, setPresets] = useState([]);
-  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true); // 👈 loading state
-  const [message, setMessage] = useState(""); // 👈 loading state
-  const [isDisabled, setIsDisabled] = useState(false);
 
-  
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/videos3/songs`);
-        if (!response.ok) throw new Error("Failed to fetch data");
+        setSong("ParamoreBrickByBoringBrick");
 
-        const jsonSongs = await response.json();
-        const listSongs = jsonSongs.map(video => ({ songname: video.songname, creator: video.creator }))
+        const response = await fetch(`${API_URL}/videos2`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
 
-        setPresets(listSongs);
+        const data = await response.json();
+
+        const distinctVideos = [
+          ...new Map(
+            data.map(video => [video.songname, video])
+          ).values()
+        ].sort((a, b) => 
+          a.songname.localeCompare(b.songname)
+        );
+        const songnames = distinctVideos.map(video => video.songname)
+        setPresets(songnames);
         setLoading(false);
-
+        console.log(songnames)
       } catch (err) {
         console.error(err);
+        // setLoading(false);
       }
     };
 
@@ -49,25 +86,37 @@ function App() {
     const match = url.match(regex);
     return match ? match[1] : url;
   };
+
+  // const setSong = (value) => {
+  //   topPlayersRef.current = [];
+  //   bottomPlayersRef.current = [];
+  //   setTopVideos(songs[value].topVideos);
+  //   setBottomVideos(songs[value].bottomVideos);
+  // };
   
+
   const setSong = async (songname) => {
     try {
       topPlayersRef.current = [];
       bottomPlayersRef.current = [];
-      const response = await fetch(`${API_URL}/videos3/${songname}`);
+      const response = await fetch(`${API_URL}/videos2/${songname}`);
       const videos = await response.json();
+      const sortedVideos = videos.sort((a, b) => a.pos - b.pos);
       
-      const topVideos = videos
-        .filter(video => ["top"].includes(video.row_position))
+      const topVideos = sortedVideos
+        .filter(video => [1, 2, 3].includes(video.pos))
         .map(video => ({ id: video.youtube_id, delay: video.start_time }));
 
-      const bottomVideos = videos
-        .filter(video => ["bot"].includes(video.row_position))
+      const bottomVideos = sortedVideos
+        .filter(video => ![1, 2, 3].includes(video.pos))
         .map(video => ({ id: video.youtube_id, delay: video.start_time }));
 
       setCurrentSong(songname)
       setTopVideos(topVideos);
       setBottomVideos(bottomVideos);
+      // console.log(sortedVideos);
+      // console.log(topVideos)
+      // console.log(bottomVideos)
     } catch (err) {
       console.error(err.message)
     }
@@ -109,6 +158,8 @@ function App() {
 
     }, 500);
   };
+
+
   
   const setTime = () => {
     topPlayersRef.current.forEach((player, i) => {
@@ -127,6 +178,7 @@ function App() {
   };
 
   const handlePlayAll = () => {
+  
     [...topPlayersRef.current, ...bottomPlayersRef.current].forEach(player =>
       player?.playVideo()
     );
@@ -137,6 +189,8 @@ function App() {
       player?.pauseVideo()
     );
   };
+
+
 
   const onReady = (playersRef, event, index) => {
     playersRef.current[index] = event.target;
@@ -151,140 +205,47 @@ function App() {
     }
   };
 
-  
-  const submitPreset = async () => {
-    setIsDisabled(true);
-    const randomNum = Math.floor(Math.random() * 100) + 1;
+  if (loading) {
+    return <h2>Loading...</h2>; // 👈 show while loading
+  }
 
-    // Helper function to map videos to request format
-
-    const mapVideos = (videos, row) =>
-      videos.map((video, index) => ({
-        randomsongid: randomNum,
-        youtube_id: DOMPurify.sanitize(video.id), // sanitize video ID
-        start_time: video.delay, 
-        row_position: row,
-        column_position: index + 1,
-        creator: DOMPurify.sanitize(username), // sanitize username
-      }));
-    // DOMPurify.sanitize(userInput)
-
-    const payload = [
-      ...mapVideos(topVideos, "top"),
-      ...mapVideos(bottomVideos, "bot"),
-    ];
-
-    // Fetch the current queue length
-    let rqQueue = 0;
-    try {
-      const response = await fetch(`${API_URL}/songsRequested/songs`);
-      if (!response.ok) throw new Error("Failed to fetch data");
-
-      const jsonSongs = await response.json();
-      rqQueue = jsonSongs.length;
-    } catch (err) {
-      console.error("Error fetching queue:", err);
-    }
-
-    // Helper function to show messages
-    const showMessage = (msg, duration = 3000) => {
-      setMessage(msg);
-      setTimeout(() => {
-        setMessage("");
-        setIsDisabled(false);
-      }, duration);
-    };
-
-    if (rqQueue >= 3) {
-      showMessage("Queue is full. Please try again later");
-      return;
-    }
-    if (topVideos.length === 0 && bottomVideos.length === 0) {
-      showMessage("Please input some videos");
-      return;
-    }
-    if (username == "") {
-      showMessage("Please enter a username");
-      return;
-    }
-    if (username.length > 20) {
-      showMessage("Username is too long");
-      return;
-    }
-
-
-    // Send new song request
-    console.log(payload)
-    try {
-      const response = await fetch(`${API_URL}/songsRequested/newSong`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Failed to submit preset");
-
-      showMessage("Request has been sent!");
-    } catch (err) {
-      console.error("Error submitting preset:", err);
-      showMessage("Failed to send request. Please try again.");
-    }
-  };
-
-  const handleUsername = (e) => {
-    setUsername(e.target.value); // 2. update state on input change
-  };
-
+  // if (error) {
+  //   return <h2>Error: {error}</h2>;
+  // }
   return (
     <div className="app">
 
       <div className="flex-container"> {/*controls*/}
-
-
         <div className="flex-column"> 
+        
           <button onClick={() => addVideo(setTopVideos, topVideos)}>➕ Add Top Video</button>
           <button onClick={() => addVideo(setBottomVideos, bottomVideos)}>➕ Add Bottom Video </button>
           <button onClick={buffer}>Buffer</button>
           <button onClick={setTime}>Set time</button>
           <button onClick={handlePlayAll}>▶ Play ALL Videos</button>
           <button onClick={handleStopAll}>⏹ Stop ALL Videos</button>
-          <input type="text" placeholder="Enter username" style={{ width: "100px" }} value={username} onChange={handleUsername}/>
-          <button onClick={submitPreset} disabled={isDisabled}>Submit this preset!</button>
-          {message !== "" && `${message}`}
         </div>
-
         <div className="flex-column">
           <div>
-            <select style={{ width: "200px" }} value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
-              <option value="" disabled hidden>
-                {loading ? "Loading presets" : "Select a preset!"}
-              </option>
+            <label>Presets: </label>
+            <select value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
+              {/* <option value="">-- Select --</option> */}
               {presets.map((id) => (
-                <option key={id.songname} value={id.songname} title={`created by ${id.creator}`}>
-                  {id.songname}
+                <option key={id} value={id}>
+                  {id}
                 </option>
               ))}
             </select>
 
+            {/* {"selectedFruit" && <p>You selected: {"selectedFruit"}</p>} */}
           </div>
+          {/* Presets:
+          <button onClick={() => setSong("ParamoreBrickByBoringBrick")}>Paramore - Brick by Boring Brick</button>
+          <button onClick={() => setSong("ParamoreStillIntoYou")}>Paramore - Still into you</button> */}
         </div>
       </div>
 
       <div className="video-container"> {/*top videos*/}
-        {topVideos.length === 0 && bottomVideos.length === 0 && (
-          <p>
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            Make your own sync or select a preset in the top right!
-          </p>
-        )}
         {topVideos.map((video, index) => (
           <div key={index} className="video-wrapper">
             
