@@ -257,7 +257,7 @@ function App() {
           <div>
             <select style={{ width: "200px" }} value={currentSong} onChange={(songname) => setSong(songname.target.value)}>
               <option value="" disabled hidden>
-                {loading ? "Loading presets" : "Select a preset!"}
+                {loading ? "Loading presets..." : "Select a preset!"}
               </option>
               {presets.map((id) => (
                 <option key={id.songname} value={id.songname} title={`created by ${id.creator}`}>
